@@ -39,7 +39,7 @@ class TM1637:
         # Clean up any previous setup on these specific pins
         try:
             IO.cleanup([self.__clk_pin, self.__data_pin])
-        except Exception:
+        except (RuntimeError, ValueError):
             pass  # Ignore if pins weren't previously setup
         IO.setup(self.__clk_pin, GPIO_OUT)
         IO.setup(self.__data_pin, GPIO_OUT)

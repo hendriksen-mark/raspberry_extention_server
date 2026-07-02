@@ -16,6 +16,7 @@ import config_manager
 
 SERVER_CONFIG: dict[str, Any] = config_manager.SERVER_CONFIG.yaml_config
 logger: logging.Logger = logManager.logger.get_logger(__name__)
+BASE_URL: str = "https://api.github.com/repos/hendriksen-mark/raspberry_extension_server"
 
 class GitHubInstaller:
     """
@@ -52,7 +53,7 @@ class GitHubInstaller:
                     return False
             logger.info("Update installation completed successfully")
             return True
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             logger.error(f"Error during update installation: {e}")
             return False
 
@@ -68,7 +69,7 @@ class GitHubInstaller:
             # Set state to transferring while downloading
             SERVER_CONFIG["config"]["swupdate2"]["state"] = "transferring"
             # Download server archive
-            server_url = f"https://github.com/hendriksen-mark/raspberry_extension_server/archive/{branch}.zip"
+            server_url = f"{BASE_URL}/archive/{branch}.zip"
             temp_dir = self._require_temp_dir()
             server_zip_path = temp_dir / "server.zip"
 
@@ -127,7 +128,7 @@ class GitHubInstaller:
 
             return True
 
-        except Exception as e:
+        except (OSError, RuntimeError, subprocess.CalledProcessError) as e:
             logger.error(f"Error installing server update: {e}")
             return False
 
@@ -137,7 +138,7 @@ class GitHubInstaller:
             # Set state to transferring while downloading
             SERVER_CONFIG["config"]["swupdate2"]["state"] = "transferring"
             # Download UI archive
-            ui_url = "https://github.com/hendriksen-mark/raspberry_extension_server_ui/releases/latest/download/raspberry_extension_server_ui-release.zip"
+            ui_url = f"{BASE_URL}_ui/releases/latest/download/raspberry_extension_server_ui-release.zip"
             temp_dir = self._require_temp_dir()
             ui_zip_path = temp_dir / "serverUI.zip"
 
@@ -207,7 +208,7 @@ class GitHubInstaller:
 
             return True
 
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             logger.error(f"Error installing UI update: {e}")
             return False
 
@@ -227,7 +228,7 @@ class GitHubInstaller:
         except requests.RequestException as e:
             logger.error(f"Error downloading {url}: {e}")
             return False
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Unexpected error downloading {url} to {dest_path}: {e}")
             return False
 
@@ -243,7 +244,7 @@ class GitHubInstaller:
         except zipfile.BadZipFile as e:
             logger.error(f"Error extracting {zip_path}: {e}")
             return False
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Unexpected error extracting {zip_path} to {extract_to}: {e}")
             return False
 
@@ -278,7 +279,7 @@ class GitHubInstaller:
             logger.error(f"stdout: {e.stdout}")
             logger.error(f"stderr: {e.stderr}")
             return False
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             logger.error(f"Unexpected error updating Python dependencies: {e}")
             return False
 

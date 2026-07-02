@@ -110,7 +110,7 @@ class FanRoute(Resource):
         try:
             config_manager.SERVER_CONFIG.save_config(backup=False, resource="fan")
             return fan.get_all_data(), 200
-        except Exception as e:
+        except (OSError, KeyError, ValueError) as e:
             logger.error(f"Failed to save configuration: {e}")
             return {"error": "Failed to save configuration"}, 500
 
@@ -131,6 +131,6 @@ class FanRoute(Resource):
             del SERVER_CONFIG["fan"][fan_id]
             config_manager.SERVER_CONFIG.save_config(backup=False, resource="fan")
             return {"success": True}, 200
-        except Exception as e:
+        except (KeyError, OSError, RuntimeError) as e:
             logger.error(f"Failed to delete fan: {e}")
             return {"error": "Failed to delete fan"}, 500

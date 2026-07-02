@@ -243,7 +243,7 @@ class PowerButtonObject:
                         logger.error(f"Host shutdown HTTP error: {e.code} {e.reason}")
                     except urllib.error.URLError as e:
                         logger.error(f"Host shutdown URL error: {e}")
-                    except Exception as e:
+                    except (TimeoutError, OSError) as e:
                         logger.error(f"Unexpected error calling host shutdown service: {e}")
                     # If the HTTP call failed, fall through to local shutdown fallback
                 # Fallback to direct shutdown if no API key or HTTP call fails
@@ -308,7 +308,7 @@ class PowerButtonObject:
             self.wait_for_button_release()
             time.sleep(self.debounce_time)
 
-        except Exception as e:
+        except (RuntimeError, OSError, AttributeError) as e:
             logger.error(f"Error in button handler: {e}")
 
     # ------------------------------------------------------------------ #

@@ -237,7 +237,7 @@ class Config:
                 try:
                     thermostat: ThermostatObject = thermostat
                     thermostat.update_dht_related_status(temperature=temperature)
-                except Exception as e:
+                except (AttributeError, TypeError, ValueError) as e:
                     logger.error(f"Error updating thermostat with temperature {temperature}: {e}")
 
         def handle_humidity_update(humidity: float) -> None:
@@ -246,7 +246,7 @@ class Config:
                 try:
                     thermostat: ThermostatObject = thermostat
                     thermostat.update_dht_related_status(humidity=humidity)
-                except Exception as e:
+                except (AttributeError, TypeError, ValueError) as e:
                     logger.error(f"Error updating thermostat with humidity {humidity}: {e}")
 
         # Register the callbacks
@@ -276,7 +276,7 @@ class Config:
             self._setup_dht_callbacks()
 
             logger.info("Config loaded")
-        except Exception as exc:
+        except (OSError, yaml.YAMLError, KeyError, TypeError, ValueError) as exc:
             logger.exception("CRITICAL! Config file was not loaded")
             raise SystemExit("CRITICAL! Config file was not loaded") from exc
 
@@ -450,7 +450,7 @@ class Config:
             logger.error(f"systemctl restart failed: {e}, falling back to os.execl")
             logger.info(f"restart {sys.executable} with args: {sys.argv}")
             os.execl(sys.executable, sys.executable, *sys.argv)
-        except Exception as e:
+        except OSError as e:
             logger.error(f"systemctl restart failed: {e}, falling back to os.execl")
             logger.info(f"restart {sys.executable} with args: {sys.argv}")
             os.execl(sys.executable, sys.executable, *sys.argv)

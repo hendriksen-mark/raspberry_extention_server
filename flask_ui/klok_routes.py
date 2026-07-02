@@ -145,7 +145,7 @@ class KlokRoute(Resource):
             logger.info(f"Updated klok configuration: {klok.save()}")
             config_manager.SERVER_CONFIG.save_config(backup=False, resource="klok")
             return klok.save(), 200
-        except Exception as e:
+        except (OSError, KeyError, ValueError) as e:
             logger.error(f"Failed to save configuration: {e}")
             return {"error": "Failed to save configuration"}, 500
 
@@ -161,7 +161,7 @@ class KlokRoute(Resource):
                 del SERVER_CONFIG["klok"]
                 config_manager.SERVER_CONFIG.save_config(backup=False, resource="klok")
                 return {"success": True}, 200
-            except Exception as e:
+            except (KeyError, OSError) as e:
                 logger.error(f"Failed to delete klok service: {e}")
                 return {"error": "Failed to delete klok service"}, 500
         else:

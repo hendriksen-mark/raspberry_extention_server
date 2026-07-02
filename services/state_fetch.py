@@ -69,7 +69,7 @@ async def sync_with_thermostats() -> None:
                 try:
                     await thermostat.safe_disconnect()
                     logger.debug(f"Polling: Disconnected from {thermostat.mac}")
-                except Exception as e:
+                except (BleakError, EqivaException, RuntimeError) as e:
                     logger.error(f"Polling: Error disconnecting from {thermostat.mac}: {e}")
 
         # Simple sleep with shutdown check - much more efficient
@@ -94,12 +94,12 @@ def sync_with_thermostats_threaded() -> None:
     asyncio.set_event_loop(loop)
     try:
         loop.run_until_complete(sync_with_thermostats())
-    except Exception as e:
+    except (RuntimeError, asyncio.CancelledError) as e:
         logger.error(f"Error in thermostat sync thread: {e}")
     finally:
         try:
             loop.close()
-        except Exception as e:
+        except RuntimeError as e:
             logger.error(f"Error closing sync loop: {e}")
 
 def disconnect_thermostats() -> None:
@@ -119,24 +119,24 @@ def disconnect_thermostats() -> None:
                     asyncio.wait_for(thermostat.safe_disconnect(), timeout=5.0)
                 )
                 tasks.append(task)
-            except Exception as e:
+            except (BleakError, EqivaException, RuntimeError) as e:
                 logger.error(f"Cleanup: Error preparing disconnect for {thermostat.mac}: {e}")
 
         if tasks:
             try:
                 await asyncio.gather(*tasks, return_exceptions=True)
-            except Exception as e:
+            except (RuntimeError, asyncio.CancelledError) as e:
                 logger.error(f"Cleanup: Error during gather: {e}")
 
     try:
         logger.info("Disconnecting all thermostats...")
         loop.run_until_complete(cleanup_all())
-    except Exception as e:
+    except (RuntimeError, asyncio.CancelledError) as e:
         logger.error(f"Cleanup: Error during cleanup: {e}")
     finally:
         try:
             loop.close()
-        except Exception as e:
+        except RuntimeError as e:
             logger.error(f"Cleanup: Error closing loop: {e}")
 
     logger.info("Cleanup: All thermostats disconnected.")
@@ -152,7 +152,7 @@ def run_dht_service() -> None:
             dht: DHTObject = SERVER_CONFIG["dht"]
             if dht:
                 dht.read_dht_temperature()
-        except Exception as e:
+        except (RuntimeError, OSError, ValueError, AttributeError) as e:
             logger.error(f"Error reading DHT temperature: {e}")
 
         # Use event.wait() instead of sleep loops for immediate shutdown
@@ -171,7 +171,7 @@ def run_fan_service() -> None:
             for fan in list(SERVER_CONFIG["fan"].values()):
                 fan: FanObject = fan
                 fan.run()
-        except Exception as e:
+        except (RuntimeError, OSError, ValueError) as e:
             logger.error(f"Error in fan service: {e}")
 
         # Use event.wait() instead of sleep loops for immediate shutdown
@@ -190,7 +190,7 @@ def stop_fan_service() -> None:
             fan: FanObject = fan
             fan.cleanup()
         logger.info("Fan service stopped successfully.")
-    except Exception as e:
+    except (RuntimeError, OSError) as e:
         logger.error(f"Error stopping fan service: {e}")
 
 def run_klok_service() -> None:
@@ -203,7 +203,7 @@ def run_klok_service() -> None:
             klok: KlokObject = SERVER_CONFIG["klok"]
             if klok:
                 klok.show()
-        except Exception as e:
+        except (RuntimeError, OSError, AttributeError) as e:
             logger.error(f"Error in klok service: {e}")
 
         # Use event.wait() with shorter timeout for responsive doublepoint updates
@@ -222,7 +222,7 @@ def stop_klok_service() -> None:
         if klok:
             klok.display.cleanup()
             logger.info("Klok service stopped successfully.")
-    except Exception as e:
+    except (KeyError, RuntimeError, OSError, AttributeError) as e:
         logger.error(f"Error stopping klok service: {e}")
 
 def run_powerbutton_service() -> None:
@@ -235,7 +235,7 @@ def run_powerbutton_service() -> None:
             powerbutton: PowerButtonObject = SERVER_CONFIG["powerbutton"]
             if powerbutton:
                 powerbutton.run()
-        except Exception as e:
+        except (KeyError, RuntimeError, OSError, ValueError) as e:
             logger.error(f"Error in power button service: {e}")
 
         # Use event.wait() instead of sleep for immediate shutdown
@@ -254,7 +254,7 @@ def stop_powerbutton_service() -> None:
         if powerbutton:
             powerbutton.cleanup()
             logger.info("Power button service stopped successfully.")
-    except Exception as e:
+    except (KeyError, RuntimeError, OSError) as e:
         logger.error(f"Error stopping power button service: {e}")
 
 def stop_dht_service() -> None:

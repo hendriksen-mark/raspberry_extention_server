@@ -9,6 +9,7 @@ from flask_restful import Resource
 from bleak.exc import BleakError
 
 import logManager
+from eqiva_thermostat import EqivaException
 
 import config_manager
 
@@ -67,7 +68,7 @@ class ThermostatRoute(Resource):
             except ValueError as e:
                 logger.error(f"Failed to create thermostat: {e}")
                 return {"error": str(e)}, 400
-            except Exception as e:
+            except (OSError, KeyError) as e:
                 logger.error(f"Failed to save configuration: {e}")
                 return {"error": "Failed to save configuration"}, 500
 
@@ -94,7 +95,7 @@ class ThermostatRoute(Resource):
             except BleakError:
                 logger.error(f"Device with address {mac} was not found")
                 return {"error": f"Device with address {mac} was not found"}, 404
-            except Exception as e:
+            except (EqivaException, RuntimeError, OSError) as e:
                 logger.error(f"Poll failed for {mac}: {e}")
                 return {"error": f"Poll failed: {e}"}, 500
 
@@ -204,7 +205,7 @@ class ThermostatRoute(Resource):
             logger.info(f"Updated thermostat with MAC {mac}: {thermostat.save()}")
             config_manager.SERVER_CONFIG.save_config(backup=False, resource="thermostats")
             return thermostat.save(), 200
-        except Exception as e:
+        except (OSError, KeyError, ValueError) as e:
             logger.error(f"Failed to save configuration: {e}")
             return {"error": "Failed to save configuration"}, 500
 
@@ -227,7 +228,7 @@ class ThermostatRoute(Resource):
                 del SERVER_CONFIG["thermostats"][thermostat.id]
                 config_manager.SERVER_CONFIG.save_config(backup=False, resource="thermostats")
                 return {"success": True}, 200
-            except Exception as e:
+            except (KeyError, OSError) as e:
                 logger.error(f"Failed to delete thermostat: {e}")
                 return {"error": "Failed to delete thermostat"}, 500
         else:

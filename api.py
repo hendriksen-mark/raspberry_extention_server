@@ -74,7 +74,7 @@ def main():
     except KeyboardInterrupt:
         logger.info("Received KeyboardInterrupt, shutting down gracefully...")
         handle_exit(signal.SIGINT, None)
-    except Exception as e:
+    except (OSError, RuntimeError) as e:
         logger.error(f"Unexpected error occurred: {e}")
         handle_exit(signal.SIGTERM, None)
     finally:

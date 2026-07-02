@@ -66,7 +66,7 @@ class DHTRoute(Resource):
             except KeyError as e:
                 logger.error(f"KeyError: {e}")
                 return {"error": "DHT sensor configuration not found"}, 404
-            except Exception as e:
+            except (AttributeError, RuntimeError) as e:
                 logger.error(f"Failed to retrieve DHT info: {e}")
                 return {"error": "Failed to retrieve DHT info"}, 500
 
@@ -135,7 +135,7 @@ class DHTRoute(Resource):
             logger.info(f"Updated DHT configuration: {dht.save()}")
             config_manager.SERVER_CONFIG.save_config(backup=False, resource="dht")
             return dht.save(), 200
-        except Exception as e:
+        except (OSError, KeyError, ValueError) as e:
             logger.error(f"Failed to save configuration: {e}")
             return {"error": "Failed to save configuration"}, 500
 
@@ -150,7 +150,7 @@ class DHTRoute(Resource):
                 del SERVER_CONFIG["dht"]
                 config_manager.SERVER_CONFIG.save_config(backup=False, resource="dht")
                 return {"success": True}, 200
-            except Exception as e:
+            except (KeyError, OSError) as e:
                 logger.error(f"Failed to delete DHT configuration: {e}")
                 return {"error": "Failed to delete DHT configuration"}, 500
         else:

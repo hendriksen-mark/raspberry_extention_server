@@ -14,7 +14,7 @@ import logManager
 
 logger: logging.Logger = logManager.logger.get_logger(__name__)
 
-LOG_FILE = logManager.logger._get_log_file_path()
+LOG_FILE = logManager.logger.get_log_file_path()
 
 # Module-level flag to track server state
 _SERVER_RUNNING = threading.Event()
@@ -49,12 +49,12 @@ class LogWebSocketHandler(WebSocket):
                     if line:
                         try:
                             self.send(line)
-                        except Exception as e:
+                        except (OSError, RuntimeError) as e:
                             logger.error(f"Error sending log line: {e}")
                             break
                     else:
                         time.sleep(0.5)
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             logger.error(f"Error tailing log file: {e}")
 
 cherrypy.config.update({'server.socket_host': '0.0.0.0', 'server.socket_port': 9000})
@@ -109,7 +109,7 @@ def start_ws_server() -> None:
                 'tools.websocket.handler_cls': LogWebSocketHandler
             }
         })
-    except Exception as e:
+    except (RuntimeError, OSError) as e:
         logger.error(f"Failed to start CherryPy WebSocket server: {e}")
         logger.exception("Full traceback:")
         raise
@@ -128,6 +128,6 @@ def stop_ws_server() -> None:
             logger.info("CherryPy WebSocket server stopped.")
         else:
             logger.info("CherryPy WebSocket server is not running.")
-    except Exception as e:
+    except (RuntimeError, OSError) as e:
         logger.error(f"Error stopping CherryPy WebSocket server: {e}")
         logger.exception("Full traceback:")

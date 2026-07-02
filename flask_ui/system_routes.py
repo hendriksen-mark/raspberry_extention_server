@@ -52,7 +52,7 @@ class SystemRoute(Resource):
                         "webui": config_manager.SERVER_CONFIG.WebUICreateTime
                     }
                 response = response_data, status_code
-            except Exception as e:
+            except (OSError, KeyError, AttributeError, RuntimeError) as e:
                 logger.error(f"Error getting all system info: {e}")
                 response = {"error": "Failed to retrieve system information"}, 500
 
@@ -104,7 +104,7 @@ def _get_all_config() -> tuple[dict[str, Any], int]:
         }
 
         return response, 200
-    except Exception as e:
+    except (KeyError, OSError, AttributeError) as e:
         logger.error(f"Error getting config: {e}")
         return {"error": "Failed to retrieve configuration"}, 500
 
@@ -120,7 +120,7 @@ def _get_thermostat_config() -> dict[str, Any] | str:
         else:
             thermostats_data = "No Thermostats Configured"
         return thermostats_data
-    except Exception as e:
+    except (KeyError, AttributeError) as e:
         logger.error(f"Error getting thermostat config: {e}")
         return "Error getting Thermostats config"
 
@@ -136,7 +136,7 @@ def _get_fan_config() -> dict[str, Any] | str:
         else:
             fans_data = "No Fans Configured"
         return fans_data
-    except Exception as e:
+    except (KeyError, AttributeError) as e:
         logger.error(f"Error getting fan config: {e}")
         return "Error getting Fan config"
 
@@ -147,7 +147,7 @@ def _get_dht_config() -> dict[str, Any] | str:
         if dht_obj and isinstance(dht_obj, DHTObject):
             return dht_obj.save()
         return "No DHT Sensor Configured"
-    except Exception as e:
+    except (KeyError, AttributeError) as e:
         logger.error(f"Error getting DHT config: {e}")
         return "Error getting DHT config"
 
@@ -158,7 +158,7 @@ def _get_klok_config() -> dict[str, Any] | str:
         if klok_obj and isinstance(klok_obj, KlokObject):
             return klok_obj.save()
         return "No Klok Configured"
-    except Exception as e:
+    except (KeyError, AttributeError) as e:
         logger.error(f"Error getting Klok config: {e}")
         return "Error getting Klok config"
 
@@ -169,6 +169,6 @@ def _get_powerbutton_config() -> dict[str, Any] | str:
         if powerbutton_obj and isinstance(powerbutton_obj, PowerButtonObject):
             return powerbutton_obj.save()
         return "No PowerButton Configured"
-    except Exception as e:
+    except (KeyError, AttributeError) as e:
         logger.error(f"Error getting PowerButton config: {e}")
         return "Error getting PowerButton config"

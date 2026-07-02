@@ -102,7 +102,7 @@ class ThermostatObject:
             if self.failed_connection:
                 logger.info(f"Connection recovered for {self.mac}")
                 self.failed_connection = False
-        except Exception as e:
+        except (BleakError, EqivaException, RuntimeError, OSError) as e:
             logger.error(f"Failed to connect to {self.mac}: {e}")
             self.failed_connection = True
             raise
@@ -113,7 +113,7 @@ class ThermostatObject:
             await self.equiva_thermostat.disconnect()
         except (TimeoutError, asyncio.CancelledError) as e:
             logger.warning(f"Disconnect timeout/cancelled for {self.equiva_thermostat.address}: {e}")
-        except Exception as e:
+        except (BleakError, EqivaException, RuntimeError, OSError) as e:
             logger.error(f"Error disconnecting from {self.equiva_thermostat.address}: {e}")
 
     async def poll_status(self) -> None:
@@ -143,12 +143,12 @@ class ThermostatObject:
 
             if self.target_heating_cooling_state != target_mode_status["int"] or \
                 self.current_heating_cooling_state != current_mode_status["int"]:
-                    logger.info(
-                        f"Status changed for {self.mac}: "
-                        f"targetMode: {target_mode_status['str']}, "
-                        f"currentMode: {current_mode_status['str']}, "
-                        f"targetTemp: {temp}C"
-                    )
+                logger.info(
+                    f"Status changed for {self.mac}: "
+                    f"targetMode: {target_mode_status['str']}, "
+                    f"currentMode: {current_mode_status['str']}, "
+                    f"targetTemp: {temp}C"
+                )
 
             self.target_heating_cooling_state = target_mode_status["int"]
             self.target_temperature = temp
@@ -162,14 +162,14 @@ class ThermostatObject:
                 f"targetTemp: {self.target_temperature}C"
                 )
 
-        except Exception as e:
+        except (BleakError, EqivaException, RuntimeError, OSError) as e:
             logger.error(f"Polling failed for {self.mac}: {e}")
             self.failed_connection = True
             raise
         finally:
             try:
                 await self.safe_disconnect()
-            except Exception as e:
+            except (BleakError, EqivaException, RuntimeError, OSError) as e:
                 logger.error(f"Error disconnecting from {self.mac}: {e}")
 
     async def set_temperature(self, temp: str) -> dict[str, Any]:
@@ -194,14 +194,14 @@ class ThermostatObject:
         except ValueError as ex:
             logger.error(f"Invalid temperature value for {mac}: {str(ex)}")
             return {"result": "error", "message": "Invalid temperature value"}
-        except Exception as ex:
+        except (RuntimeError, OSError) as ex:
             logger.error(f"Unexpected error for {mac}: {str(ex)}")
             self.failed_connection = True
             return {"result": "error", "message": "Connection failed"}
         finally:
             try:
                 await self.safe_disconnect()
-            except Exception as e:
+            except (BleakError, EqivaException, RuntimeError, OSError) as e:
                 logger.error(f"Error disconnecting from {mac}: {e}")
 
     async def set_mode(self, mode: str) -> dict[str, Any]:
@@ -233,14 +233,14 @@ class ThermostatObject:
             logger.error(f"EqivaException for {mac}: {str(ex)}")
             self.failed_connection = True
             return {"result": "error", "message": str(ex)}
-        except Exception as ex:
+        except (RuntimeError, OSError) as ex:
             logger.error(f"Unexpected error for {mac}: {str(ex)}")
             self.failed_connection = True
             return {"result": "error", "message": "Connection failed"}
         finally:
             try:
                 await self.safe_disconnect()
-            except Exception as e:
+            except (BleakError, EqivaException, RuntimeError, OSError) as e:
                 logger.error(f"Error disconnecting from {mac}: {e}")
 
     def get_all_data(self) -> dict[str, Any]:

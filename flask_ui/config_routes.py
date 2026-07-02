@@ -90,13 +90,13 @@ class ConfigRoute(Resource):
                         "changes": changes_made,
                         "config": SERVER_CONFIG["config"]
                     }, 200
-                except Exception as e:
+                except (OSError, KeyError, ValueError) as e:
                     logger.error(f"Failed to save configuration: {e}")
                     return {"error": "Failed to save configuration"}, 500
             else:
                 return {"message": "No changes made", "config": SERVER_CONFIG["config"]}, 200
 
-        except Exception as e:
+        except (KeyError, ValueError, TypeError) as e:
             logger.error(f"Error processing PUT request: {e}")
             return {"error": "Failed to process request"}, 500
 

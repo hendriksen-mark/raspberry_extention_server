@@ -88,7 +88,7 @@ class PowerButtonRoute(Resource):
             logger.info(f"Updated PowerButton configuration: {power_button.save()}")
             config_manager.SERVER_CONFIG.save_config(backup=False, resource="powerbutton")
             return power_button.save(), 200
-        except Exception as e:
+        except (OSError, KeyError, ValueError) as e:
             logger.error(f"Failed to save configuration: {e}")
             return {"error": "Failed to save configuration"}, 500
 
@@ -103,7 +103,7 @@ class PowerButtonRoute(Resource):
                 del SERVER_CONFIG["powerbutton"]
                 config_manager.SERVER_CONFIG.save_config(backup=False, resource="powerbutton")
                 return {"success": True}, 200
-            except Exception as e:
+            except (KeyError, OSError) as e:
                 logger.error(f"Failed to delete PowerButton service: {e}")
                 return {"error": "Failed to delete PowerButton service"}, 500
         else:

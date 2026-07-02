@@ -73,7 +73,7 @@ class DHTObject:
             if hasattr(self.dht_device, "is_dummy") and self.dht_device.is_dummy():
                 return
             logger.debug(f"DHT{self.sensor_type} sensor initialized on pin D{self.dht_pin}")
-        except (AttributeError, NotImplementedError, Exception) as e:
+        except (AttributeError, NotImplementedError, RuntimeError, OSError, ValueError) as e:
             logger.error(f"Failed to initialize DHT sensor: {e}")
             logger.warning("Using DummyDHT")
             self.dht_device = adafruit_dht.DHT22(cast(Any, pin))
@@ -100,7 +100,7 @@ class DHTObject:
         for callback in self.temperature_callbacks:
             try:
                 callback(temperature)
-            except Exception as e:
+            except (RuntimeError, TypeError, AttributeError) as e:
                 logger.error(f"Error in temperature callback: {e}")
 
     def _notify_humidity_callbacks(self, humidity: float) -> None:
@@ -108,7 +108,7 @@ class DHTObject:
         for callback in self.humidity_callbacks:
             try:
                 callback(humidity)
-            except Exception as e:
+            except (RuntimeError, TypeError, AttributeError) as e:
                 logger.error(f"Error in humidity callback: {e}")
 
     def read_dht_temperature(self) -> None:
@@ -134,7 +134,7 @@ class DHTObject:
                         logger.debug(f"DHT read successful on attempt {attempt + 1}")
                     break
 
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 error_str = str(e).lower()
                 # These are normal DHT sensor errors that should trigger a retry
                 if ("checksum did not validate" in error_str or

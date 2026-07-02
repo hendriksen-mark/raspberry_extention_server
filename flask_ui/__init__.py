@@ -12,7 +12,6 @@ from flask_restful import Api
 from werkzeug.security import check_password_hash
 import logManager
 import flask_login
-import config_manager
 from flask_ui.core import User  # dummy import for flask_login module
 from flask_ui.core.views import core
 from flask_ui.error_pages.handlers import error_pages
@@ -32,7 +31,8 @@ def create_app(server_config) -> Flask:
     """
     App factory function following diyHue pattern
     """
-    root_dir: str = config_manager.SERVER_CONFIG.runningDir
+    yaml_config: dict[str, Any] = server_config.yaml_config if hasattr(server_config, 'yaml_config') else server_config
+    root_dir: str = server_config.runningDir
 
     template_dir: str = os.path.join(root_dir, 'flask_ui', 'templates')
     static_dir: str = os.path.join(root_dir, 'flask_ui', 'assets')
@@ -66,7 +66,7 @@ def create_app(server_config) -> Flask:
 
     @login_manager.user_loader
     def user_loader(email: str) -> User | None:
-        if email not in server_config["config"]["users"]:
+        if email not in yaml_config["config"]["users"]:
             return None
         user: User = User()
         setattr(user, "id", email)
@@ -78,7 +78,7 @@ def create_app(server_config) -> Flask:
         email: str | None = request.form.get('email')
         if email is None:
             return None
-        if email not in server_config["config"]["users"]:
+        if email not in yaml_config["config"]["users"]:
             return None
         password: str | None = request.form.get('password')
         if password is None:
@@ -88,7 +88,7 @@ def create_app(server_config) -> Flask:
         logger.info(f"Authentication attempt for user: {email}")
         if not check_password_hash(
             password,
-            server_config["config"]["users"][email]["password"]
+            yaml_config["config"]["users"][email]["password"]
         ):
             return None
         return user

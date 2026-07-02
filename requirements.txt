@@ -1,12 +1,9 @@
-astral
 ws4py
 requests
-email-validator
 flask
 flask_login
 flask_restful
 flask_wtf
-jsonify
 Werkzeug
 WTForms
 pyyaml
